@@ -148,6 +148,7 @@ begin
 	linces = df15[:,"lynx"]
 	liebres = df15[:,"hare"] 
 	years = df15[:,"year"]
+	datos_pd = [linces liebres]
 end
 
 # ╔═╡ 9f9ce633-1c42-4dc7-803d-3eb3ed287083
@@ -167,22 +168,77 @@ end
 begin
 	pin0 = [liebres[1],linces[1]] 
 	tspan_pd = [years[1],years[end]]
-	prom_lotka = ODEProblem(lotka_volterra!,pin0,tspan_pd,(8,150,1,0.8,0.4))
+	
+	prom_lotka = ODEProblem(lotka_volterra!,pin0,tspan_pd,(2,100,0.09,0.1,0.1))
+	
+	func_lotka = build_loss_objective(prom_lotka,Tsit5(),L2Loss(years,datos_pd),Optimization.AutoFiniteDiff(),maxiters=10000,verbose=false)
+	
+	optprob_lotka = OptimizationProblem(func_lotka,[3,100,0.3,0.2,0.1],lb=[0.2,10,0.01,0.01,0.01],ub=[5,200,0.3,0.3,0.3])
+	
 end
 
-# ╔═╡ f6dbe8ca-c079-4543-b072-32fef23b8db2
-begin 
-	sol_lotka = solve(prom_lotka)
-	plot(sol_lotka)
+# ╔═╡ 34042f61-3009-4817-8276-76efcbd2698b
+begin
+	sol_lotka = solve(optprob_lotka , BFGS() )
+	prob_lotka_r1 = remake(prom_lotka,p=sol_lotka)
+	sol_lotka_r1  = solve(prob_lotka_r1)
+	plot(sol_lotka_r1)
+	#plot!(years,linces) bou
 	#plot!(years,liebres)
-	#plot!(years,linces)
 end
 
-# ╔═╡ 8b02109d-1c45-43dc-b12d-2aa1d45e3de2
-sol_lotka[1,:]
+# ╔═╡ 371658df-ff84-4a96-8376-c63ab3577791
+begin
+	linces_s = zeros(30)
+	liebres_s = zeros(30)
+	years_s = years[62:end,:]
+	for i in 1:29
+		mean_linces = (linces[i+60]+linces[i+61]+linces[i+62])/3 
+		mean_liebres = (liebres[i+60]+liebres[i+61]+liebres[i+62])*4
+		linces_s[i] = mean_linces
+		liebres_s[i] = mean_liebres
+	end
 
-# ╔═╡ 0177da16-d233-4d48-83d5-22775de90a04
-linces
+	liebres_s[30] = (liebres[90]+liebres[91])/2
+	linces_s[30] = (linces[90]+linces[91])/2
+
+	datos_pd_s = [linces_s liebres_s]
+	
+end
+
+# ╔═╡ abc8c64f-61e5-403d-b805-58d89d51a15b
+begin
+	plot(years_s,liebres[62:end,:])
+	plot!(years_s,liebres_s)
+end
+
+# ╔═╡ 2498c456-46bc-4d6c-a0b8-3231bf4c113a
+function lotka_volterra_2!(du,u,p,t)
+	du[1] = -p[1]*u[1]+p[2]*u[1]*u[2]
+	du[2] = p[3]*u[2]-p[4]*u[1]*u[2]
+end
+
+# ╔═╡ 621a7ef4-b120-4015-9a09-4056daf217c6
+begin
+	p0vi = [linces_s[1],liebres_s[1],0.1,0.1,0.001,0.01]
+	pin0_s = [linces_s[1],liebres_s[1]] 
+	tspan_pd_s = [years_s[1],years_s[end]]
+	
+	prom_lotka_s = ODEProblem(lotka_volterra_2!,pin0_s,tspan_pd_s)
+	
+	func_lotka_s = build_loss_objective(prom_lotka_s,AutoTsit5(Rosenbrock23()),L2Loss(years_s,datos_pd_s),Optimization.AutoFiniteDiff(),prob_generator = (prom_lotka_s,q)->remake(prom_lotka_s,u0=q[1:2],p=q[3:6]))
+	
+	optprob_lotka_s = OptimizationProblem(func_lotka_s, p0vi ,lb=[10,100,0,0,0,0],ub=[200,1000,0.1,10,0.01,1])
+
+	sol_lotka_s = solve(optprob_lotka_s ,SAMIN(), maxiters=30000)
+	
+end
+
+# ╔═╡ 0553ff2b-93ab-4af1-82de-53ff56551b17
+begin
+	sol_lotka_r1_s  = solve(remake(prom_lotka_s,u0=sol_lotka_s[1:2],p=sol_lotka_s[3:6]))
+	plot(sol_lotka_r1_s)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2123,8 +2179,11 @@ version = "1.4.1+0"
 # ╠═9f9ce633-1c42-4dc7-803d-3eb3ed287083
 # ╠═1a6c315b-098d-413a-a08f-df3b055f61d1
 # ╠═11489d2a-9c30-44bb-b829-05a774bc86fa
-# ╠═f6dbe8ca-c079-4543-b072-32fef23b8db2
-# ╠═8b02109d-1c45-43dc-b12d-2aa1d45e3de2
-# ╠═0177da16-d233-4d48-83d5-22775de90a04
+# ╠═34042f61-3009-4817-8276-76efcbd2698b
+# ╠═371658df-ff84-4a96-8376-c63ab3577791
+# ╠═abc8c64f-61e5-403d-b805-58d89d51a15b
+# ╠═2498c456-46bc-4d6c-a0b8-3231bf4c113a
+# ╠═621a7ef4-b120-4015-9a09-4056daf217c6
+# ╠═0553ff2b-93ab-4af1-82de-53ff56551b17
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
