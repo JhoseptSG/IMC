@@ -180,6 +180,151 @@ plot(abs.(rfft(y)))
 # ╔═╡ 42a37d3a-c405-412b-8d2e-9869c9a4862e
 typeof(abs.(rfft(y)))
 
+# ╔═╡ ebc5b42d-69ab-48e3-80bc-9e311e84a8fb
+md"""
+## Ejercicio 18
+Analizar los archivos **nota*.wav**. Para cargarlos, utilizar el comando: **wavread** de la librería **WAV**. **wavread** devuelve una tupla con varias cosas. Sólo nos interesan la primera coordenada, que es una matriz con los datos, y la segunda, que es la frecuencia de sampleo. Los datos pueden venir como una sola columna (un canal) o como dos (stereo). En el segundo caso debe procesarse cada columna por separado, o (más fácil) sólo una. Para cada archivo:
+
+(a) Computar la transformada de Fourier y graficar los módulos de las frecuencias (utilizando **fftfreq**).
+
+(b) Identificar la frecuencia fundamental y clasificar la nota según la tabla generada en el Ejercicio 3.
+
+(c) Identificar las frecuencias que siguen en importancia a la fundamental. ¿Qué se observa?
+(pueden resultar útiles algunos de los siguientes comandos:**sort,sortperm,findall**).
+
+(d) Identificar las notas a las que corresponden las frecuencias halladas en el ítem anterior.
+
+(e) Dados dos archivos en los que la nota fundamental sea la misma pero el instrumento distinto, comparar sus respectivas transformadas.
+"""
+
+# ╔═╡ 3845300d-25aa-4b39-97de-eaef84ed822f
+begin 
+	nota_1 = wavread("/home/clinux01/Descargas/Notas/nota1.wav")
+	nota_1_datos = nota_1[1]
+	nota_1_fs = nota_1[2]
+	nota_1_trans = fft(nota_1_datos)
+	nota_1_fs = fftfreq(length(nota_1_datos),nota_1_fs)
+	plot(nota_1_fs,abs.(nota_1_trans), xlim = (-1500,1500))
+end
+
+# ╔═╡ 0d3fdfa3-1948-4011-bbfb-f362371d0fb7
+function find_nota(freq)
+	if freq < notas[1]
+		return 1 
+	end 
+
+	if freq > notas[end]
+		return length(size)
+	end
+	mayor = searchsortedfirst(notas,freq)
+	menor = mayor-1
+	if (notas[mayor] - freq) > (freq - notas[menor])
+		return menor
+	else 
+		
+		return mayor
+	end 
+end
+
+# ╔═╡ 7dfec886-0081-4858-9d4b-a6dee264cde6
+n_notas = [ "LA" , "LA S" , "SI","DO" , "DO S" , "RE" , "RE S " , " MI" , "FA" , "FA S" , "SOL" , "SOL S "]
+
+# ╔═╡ 5efc256f-38cf-4476-80cb-ddc86c64daa2
+begin
+	nota_1_fm = nota_1_fs[argmax(abs.(nota_1_trans))[1]]
+	nota_mi_1 = find_nota(nota_1_fm)
+	n_notas[(mod(nota_mi_1,12)+1) ], nota_mi_1 ÷ 12
+end
+
+# ╔═╡ 784e4992-71f8-43c4-906a-0e65884389a3
+begin
+	nota_1_fm_2 = nota_1_fs[argmax((abs.(nota_1_trans) .< 1500) .* abs.(nota_1_trans))[1]]
+	
+	nota_mi_2 = find_nota(nota_1_fm_2)
+	n_notas[(mod(nota_mi_2,12)+1) ], nota_mi_2 ÷ 12
+end
+
+# ╔═╡ 4b469b50-613a-44b5-a682-412a7514cb8f
+begin
+	nota_1_fm_3 = nota_1_fs[argmax((abs.(nota_1_trans) .< 700) .* abs.(nota_1_trans))[1]]
+	
+	nota_mi_3 = find_nota(nota_1_fm_3)
+	n_notas[(mod(nota_mi_3,12)+1) ], nota_mi_3 ÷ 12
+end
+
+# ╔═╡ ee27ed45-0e84-4607-8092-8bfd83cc9178
+begin 
+	nota_2 = wavread("/home/clinux01/Descargas/Notas/nota2.wav")
+	nota_2_datos = nota_2[1]
+	nota_2_fs = nota_2[2]
+	nota_2_trans = fft(nota_2_datos)
+	nota_2_fs = fftfreq(length(nota_2_datos),nota_2_fs)
+	plot(nota_2_fs,abs.(nota_2_trans), xlim = (-2000,2000))
+end
+
+# ╔═╡ 4fbf5d54-8113-4a1e-af6c-4dcdbd3adf48
+begin
+	nota_2_fm = nota_2_fs[argmax(abs.(nota_2_trans))[1]]
+	nota_m2_1 = find_nota(nota_2_fm)
+	n_notas[(mod(nota_m2_1,12)+1) ], nota_m2_1 ÷ 12
+end
+
+# ╔═╡ f43a1bbe-4b95-4727-8821-0d0147e62fab
+begin
+	nota_2_fm_2 = abs(nota_2_fs[argmax((abs.(nota_2_trans) .< 4000) .* abs.(nota_2_trans))[1]])
+	
+	nota_m2_2 = find_nota(nota_2_fm_2)
+	n_notas[(mod(nota_m2_2,12)+1) ], nota_m2_2 ÷ 12
+end
+
+# ╔═╡ 6b4c3c75-19bd-44a5-9188-3958798882ff
+begin
+	nota_2_fm_3 = abs(nota_2_fs[argmax((abs.(nota_2_trans) .< 2500) .* abs.(nota_2_trans))[1]] )
+	
+	nota_m2_3 = find_nota(nota_2_fm_3)
+	n_notas[(mod(nota_m2_3,12)+1) ], nota_m2_3 ÷ 12
+end
+
+# ╔═╡ 03d81409-e411-4fbb-a079-1a03e85f299f
+
+
+# ╔═╡ d25de08f-a92d-4f40-a11d-10ca8f68bf6e
+
+
+# ╔═╡ 09d64362-8705-4547-8d33-0a794023b2db
+md"""
+## Ejercicio 19
+Los archivos **secret*.wav** contienen pistas de audio adulteradas. Queremos limpiar
+el ruido y (si hace falta) subir el volumen de modo que el audio se torne reconocible.
+En cada caso, aplicar **fft**, graficar y modificar la transformada de manera adecuada. Luego, aplicar la transformada inversa y ejecutar la pista corregida. Cada archivo puede requerir operaciones diferentes.
+
+**Cuidado:** Algunos archivos pueden tener volumen muy alto. Escuchar con volumen moderado y con auriculares flojos.
+"""
+
+# ╔═╡ c6699fc1-8c64-4d4b-89e0-0d9a1ca5a037
+begin 
+	datos_1 = wavread("/home/clinux01/Descargas/secret1.wav")[1]
+	fq_sec_1 = wavread("/home/clinux01/Descargas/secret1.wav")[2]
+	sec_1_trans = fft(datos_1)
+	fq_sec_1 = fftfreq(length(sec_1_trans),fq_sec_1)
+	plot(fq_sec_1,abs.(sec_1_trans), xlim = (-5000,5000))
+end
+
+# ╔═╡ 147ddc87-625f-4daa-a5bf-c2d63b93a3da
+begin
+sec_1_mod = sec_1_trans
+sec_1_mod[4200:end-4200] .= 0
+end
+
+# ╔═╡ 74051c79-715c-48a3-8301-82f544dae8aa
+plot(fq_sec_1,abs.(sec_1_mod) , xlim = (-1000,1000) )
+
+# ╔═╡ 3e70a267-3f18-43d7-8cac-dece18c1f9d8
+begin 
+	inversa_sin_ruido = ifft(sec_1_mod)
+	wavplay(30*real.(inversa_sin_ruido) , wavread("/home/clinux01/Descargas/secret1.wav")[2])
+end
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -1261,5 +1406,23 @@ version = "1.4.1+1"
 # ╠═e8030015-a5e0-48f2-9366-c945b6753cb1
 # ╠═ac5fc358-6a67-4016-b1ef-9aa08dc82dc7
 # ╠═42a37d3a-c405-412b-8d2e-9869c9a4862e
+# ╟─ebc5b42d-69ab-48e3-80bc-9e311e84a8fb
+# ╠═3845300d-25aa-4b39-97de-eaef84ed822f
+# ╠═0d3fdfa3-1948-4011-bbfb-f362371d0fb7
+# ╠═5efc256f-38cf-4476-80cb-ddc86c64daa2
+# ╠═7dfec886-0081-4858-9d4b-a6dee264cde6
+# ╠═784e4992-71f8-43c4-906a-0e65884389a3
+# ╠═4b469b50-613a-44b5-a682-412a7514cb8f
+# ╠═ee27ed45-0e84-4607-8092-8bfd83cc9178
+# ╠═4fbf5d54-8113-4a1e-af6c-4dcdbd3adf48
+# ╠═f43a1bbe-4b95-4727-8821-0d0147e62fab
+# ╠═6b4c3c75-19bd-44a5-9188-3958798882ff
+# ╠═03d81409-e411-4fbb-a079-1a03e85f299f
+# ╠═d25de08f-a92d-4f40-a11d-10ca8f68bf6e
+# ╟─09d64362-8705-4547-8d33-0a794023b2db
+# ╠═c6699fc1-8c64-4d4b-89e0-0d9a1ca5a037
+# ╠═147ddc87-625f-4daa-a5bf-c2d63b93a3da
+# ╠═74051c79-715c-48a3-8301-82f544dae8aa
+# ╠═3e70a267-3f18-43d7-8cac-dece18c1f9d8
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
